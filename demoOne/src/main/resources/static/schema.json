@@ -122,4 +122,4 @@
     }
   },
 
-  "required": ["planCostShares"]}
+  "required": ["planCostShares","linkedPlanServices", "_org","objectId","objectType","planType", "creationDate"]}

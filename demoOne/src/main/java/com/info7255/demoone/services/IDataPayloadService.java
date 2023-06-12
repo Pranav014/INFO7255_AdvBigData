@@ -1,19 +1,14 @@
 package com.info7255.demoone.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.info7255.demoone.model.DataPayload;
 
-import java.util.List;
+import java.util.Map;
 
 public interface IDataPayloadService {
-    boolean addData(DataPayload dataPayload);
+    Map<String, Object> addData(JsonNode createRequest);
 
-    List<DataPayload> getData();
+    void deleteData(String id);
 
-    boolean deleteData(String id);
-
-    DataPayload find(String id);
-
-    void addEtag(String objectId, String md5Hash);
-
-    String getETag(String id);
+    String getPlan(String id, String requestETag);
 }

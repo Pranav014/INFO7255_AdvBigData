@@ -8,8 +8,10 @@ import java.util.List;
 public interface IDAO {
     boolean addData(DataPayload dataPayload);
     List<DataPayload> getData();
-    boolean deleteData(String id);
-    DataPayload find(String id);
+    void deleteData(String id);
+    Object find(String id);
     boolean addEtag(String id, String etag);
     String getETag(String id);
+
+    void save(String objectId, String toString);
 }

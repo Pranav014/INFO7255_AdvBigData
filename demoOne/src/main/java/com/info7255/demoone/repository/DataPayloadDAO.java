@@ -1,5 +1,6 @@
 package com.info7255.demoone.repository;
 
+import com.info7255.demoone.exceptions.PlanNotFoundException;
 import com.info7255.demoone.model.DataPayload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -44,16 +45,19 @@ public class DataPayloadDAO implements IDAO {
     }
 
     @Override
-    public boolean deleteData(String id) {
-        Long l = redisTemplate.opsForHash().delete(KEY, id);
-        System.out.println("LONG L = " + l);
-        return l == 1 ? true : false;
+    public void deleteData(String key) {
+        if(!Boolean.TRUE.equals(redisTemplate.delete(key))){
+            throw new PlanNotFoundException();
+        }
 
     }
 
     @Override
-    public DataPayload find(String id) {
-        return (DataPayload) redisTemplate.opsForHash().get(KEY, id);
+    public Object find(String key) {
+        Object response = redisTemplate.opsForValue().get(key);
+        if(response==null)
+            throw new PlanNotFoundException();
+        return response;
     }
 
 
@@ -77,6 +81,11 @@ public class DataPayloadDAO implements IDAO {
             return null;
         }
 
+    }
+
+    @Override
+    public void save(String key, String value) {
+        redisTemplate.opsForValue().set(key, value);
     }
 
 

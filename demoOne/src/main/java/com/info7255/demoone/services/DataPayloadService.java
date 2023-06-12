@@ -1,53 +1,57 @@
 package com.info7255.demoone.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.info7255.demoone.exceptions.PlanNotUpdatedException;
 import com.info7255.demoone.repository.IDAO;
 import com.info7255.demoone.model.DataPayload;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class DataPayloadService implements IDataPayloadService{
-    @Autowired
-    private IDAO dataPayloadDao;
-    @Override
-    @Transactional
-    public boolean addData(DataPayload dataPayload) {
-        return dataPayloadDao.addData(dataPayload);
+    private final IDAO dataPayloadDao;
+
+    private final EncryptionService encryptionService;
+
+    public DataPayloadService(IDAO dataPayloadDao, EncryptionService encryptionService) {
+        this.dataPayloadDao = dataPayloadDao;
+        this.encryptionService = encryptionService;
     }
 
     @Override
-    public List<DataPayload> getData() {
-        return dataPayloadDao.getData();
+    public Map<String, Object> addData(JsonNode createRequest) {
+        String objectId = createRequest.get("objectId").textValue();
+        dataPayloadDao.save(objectId, createRequest.toString());
+        Map<String, Object> response = new HashMap<>();
+        response.put("objectId", objectId);
+        return response;
+    }
+
+
+    @Override
+    public void deleteData(String id) {
+        dataPayloadDao.deleteData(id);
     }
 
     @Override
-    public boolean deleteData(String id) {
-        return dataPayloadDao.deleteData(id);
-    }
+    public String getPlan(String objectId, String requestETag) {
+        Object plan =  dataPayloadDao.find(objectId);
 
-    @Override
-    public DataPayload find(String id) {
-        return dataPayloadDao.find(id);
-    }
-
-    @Override
-    public void addEtag(String objectId, String md5Hash) {
-        try{
-            boolean res =  dataPayloadDao.addEtag(objectId, md5Hash);
-            return;
+        JsonNode jsonNode;
+        ObjectMapper om = new ObjectMapper();
+        try {
+            jsonNode = om.readTree(plan.toString());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
-        catch (Exception e){
-            e.printStackTrace();
-            return;
-        }
-    }
 
-    @Override
-    public String getETag(String id) {
-        return dataPayloadDao.getETag(id);
+        if(encryptionService.encrypt(jsonNode.toString()).equals(requestETag))
+            throw new PlanNotUpdatedException(objectId);
+        return plan.toString();
     }
 
 
